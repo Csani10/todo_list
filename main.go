@@ -28,16 +28,16 @@ func Create() {
 
 	task_array := []tasks.Task{}
 
-	if strings.ToLower(input) == "y" {
-		fmt.Printf("Type 'quit' to stop")
+	if strings.ToLower(input) == "y\n" {
+		fmt.Println("Type 'quit' to stop")
 		for {
 			fmt.Print("Task: ")
 			input, err := reader.ReadString('\n')
 			if err != nil {
 				fmt.Println("Error:", err)
-				return
+				continue
 			}
-			if strings.ToLower(input) == "quit" {
+			if strings.ToLower(input) == "quit\n" {
 				break
 			}
 			task_str := input
@@ -48,9 +48,9 @@ func Create() {
 			for {
 				if err != nil {
 					fmt.Println("Error:", err)
-					return
+					continue
 				}
-				date, err = time.Parse("2006-06-01", input)
+				date, err = time.Parse("2006-06-01", strings.Trim(input, "\n\x0a"))
 				if err != nil {
 					fmt.Println("Invalid format")
 					continue
@@ -90,8 +90,8 @@ func Create() {
 		task_array = append(task_array, *task)
 	}
 
-	for taskk := range task_array {
-		fmt.Println(taskk)
+	for _, task := range task_array {
+		fmt.Println(task.GetTask())
 	}
 }
 
