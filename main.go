@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"strings"
 	"time"
@@ -42,10 +44,10 @@ func Create() {
 			}
 			task_str := input
 
-			fmt.Print("Due date (format: '2006-06-01'): ")
-			input, err = reader.ReadString('\n')
 			date := time.Now()
 			for {
+				fmt.Print("Due date (format: '2006-06-01'): ")
+				input, err = reader.ReadString('\n')
 				if err != nil {
 					fmt.Println("Error:", err)
 					continue
@@ -70,10 +72,10 @@ func Create() {
 		}
 		task_str := input
 
-		fmt.Print("Due date (format: '2006-06-01'): ")
-		input, err = reader.ReadString('\n')
 		date := time.Now()
 		for {
+			fmt.Print("Due date (format: '2006-06-01'): ")
+			input, err = reader.ReadString('\n')
 			if err != nil {
 				fmt.Println("Error:", err)
 				return
@@ -90,13 +92,44 @@ func Create() {
 		task_array = append(task_array, *task)
 	}
 
-	for _, task := range task_array {
+	fmt.Println("Tasks created!")
+}
+
+func List() {
+	fmt.Println("Listing tasks")
+
+	file, err := os.Open(os.Getenv("HOME") + "/.config/todo_list/tasks")
+	if err != nil {
+		fmt.Println("Couldnt open tasks file:", err)
+		return
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+
+	for {
+		line_b, _, err := reader.ReadLine()
+		if err != nil {
+			break
+		}
+
+		line := string(line_b[:])
+
+		task := tasks.Deserialize(line)
 		fmt.Println(task.GetTask())
 	}
 }
 
-func List() {
-	fmt.Println("list")
+func CheckConfigDir() {
+	_, err := os.Stat("~/.config/todo_list/")
+	if err == nil {
+		return
+	}
+	if errors.Is(err, fs.ErrNotExist) {
+		os.Mkdir("~/.config/todo_list/", os.ModeDir)
+	}
+
+	os.Create("~/.config/todo_list/tasks")
 }
 
 func main() {
@@ -107,8 +140,10 @@ func main() {
 
 	switch os.Args[1] {
 	case "create":
+		CheckConfigDir()
 		Create()
 	case "list":
+		CheckConfigDir()
 		List()
 	default:
 		Usage()
